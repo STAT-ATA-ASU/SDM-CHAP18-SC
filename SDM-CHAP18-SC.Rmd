@@ -1,0 +1,235 @@
+---
+title: "Chapter 18"
+author: "Alan T. Arnholt"
+date: 'Last compiled: `r format(Sys.time(), "%B %d, %Y at %X")`'
+output: bookdown::html_document2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA, warning = FALSE, message = FALSE, fig.align = "center")
+library(tidyverse)
+library(janitor)
+```
+
+# Testing Hypotheses
+
+**Objectives:**
+
+I.    Learn the steps of hypothesis testing for $p$
+
+II.   Thoughts and cautions
+
+III.  Do a hypothesis test of $p$
+
+________________
+
+**Step 1:** Formulate Hypotheses --- always parameters
+
+**Step 2:** Check assumptions and decide on a Model.
+
+* Independence? 
+
+* Randomization? 
+
+* Less than 10%? 
+
+* Success/Failure?  
+
+If all four conditions are met, a normal model and a one-proportion $z-$test are appropriate.  $\hat{p} \dot\sim \mathcal{N} \left(p, \sqrt{\frac{p(1-p)}{n}} \right)$ **assuming** $H_0$ is true.  Note: $\mu_{\hat{p}}=p$ and $\sigma_{\hat{p}}=\sqrt{\frac{p(1-p)}{n}}$
+
+**Step 3:** Calculate the standardized test statistic and the $p-$value
+$$z_{stat} = \frac{\hat{p} - p_{0}}{\sqrt{\frac{p(1-p)}{n}}}$$
+
+* $p-$value = P(get what you got or more in support of $H_A$ when $H_0$ is true)
+
+**Step 4:** Statistical and English Conclusions
+
+* Statistical: Reject of Fail to reject $H_0$.
+
+* English: There is/is not evidence for "the alternative hypothesis".  Note: "the alternative hypothesis" is problem specific and should match the question.
+
+_____________
+
+## Examaple
+
+A 1996 report from the US Consumer Product Safety Commission claimed that 90% of all American homes have at least 1 smoke detector. A fire safety campaign has been run, and the administrator wonders if the campaign has raised the local percent of smoke detectors over the national rate.  Building inspectors visit 400 randomly selected homes and find 376 have smoke detectors. Is there evidence that the local rate is higher than the national rate?
+
+____________
+
+**Step 1:** Formulate Hypotheses --- $H_0: p = .90$ versus $H_A: p > 0.90$
+
+**Step 2:** Check assumptions and decide on a Model.
+
+* Independence? **??**
+
+* Randomization? **??**
+
+* Less than 10%? **??**
+
+* Success/Failure?  **??**
+
+If all four conditions are met, a normal model and a one-proportion $z-$test are appropriate.  $\hat{p} \dot\sim \mathcal{N} \left(0.9, \sqrt{\frac{0.9(1-0.9)}{400}} \right)$ **assuming** $H_0$ is true.  Note: $\mu_{\hat{p}}=0.9$ and $\sigma_{\hat{p}}=\sqrt{\frac{0.9(1-0.9)}{400}} = `r sqrt(.9*.1/400)`$
+
+**Step 3:** Calculate the standardized test statistic and the $p-$value.
+
+
+```{r}
+# Your Code Here
+
+```
+
+* $z_{stat} = \frac{376/400 - 0.90}{\sqrt{\frac{0.9(1-0.9)}{400}}} = `r (376/400 - 0.9)/sqrt(.9*.1/400)`$
+
+* $p-$value = $P(Z \geq z_{stat}) = ?$
+
+**Step 4:** Statistical and English Conclusions
+
+* Statistical: **Reject or Fail to Reject** $H_0$ as $p-$value is **less/greater** than $\alpha = 0.05$.
+
+* English: There **is/is not** evidence to suggest the campaign has increased the percent of smoke detectors in homes over 90%.
+
+```{r}
+prop.test(x = 376, n = 400, p = 0.90, alternative = "greater", correct = FALSE)
+prop.test(x = 376, n = 400, p = 0.90, alternative = "greater", correct = FALSE)$stat^.5
+```
+
+__________________
+
+# Testing Hypotheses (Part 2)
+
+**Objectives:**
+
+I.  Learn the steps of hypothesis testing for $\mu$
+
+II. Do a hypothesis test of $\mu$
+
+III. Bootstrap HT for $\mu$
+
+IV. Key words for direction of $H_A$
+
+V.  $p-$value areas
+
+___________
+
+## Example
+
+A company has set a goal of developing a battery that lasts over 5 hours (300
+minutes) of continuous use. The first 12 batteries lasted: 321, 295, 332, 351, 281, 336, 311, 253, 270, 326, 311, and 288 minutes. Is there evidence the company has met its goal?
+
+**Step 1:** Formulate Hypotheses --- $H_0: \mu = 300$ versus $H_A:\mu > 300$
+
+**Step 2:** Check assumptions and decide on a Model.
+
+```{r}
+battery <- c(321, 295, 332, 351, 281, 336, 311, 253, 270, 326, 311, 288)
+DF <- data.frame(battery = battery)
+ggplot(data = DF, aes(sample = battery)) + 
+  geom_qq() + 
+  geom_qq_line() +
+  theme_bw()
+```
+
+One sample $t-$test seems appropriate
+
+$\bar{x} \dot\sim \mathcal{N} \left(\mu, \frac{\sigma}{\sqrt{n}}\right)$ **assuming** $H_0$ is true.
+
+```{r}
+xbar <- mean(battery)
+n <- length(battery)
+S <- sd(battery)
+tstat <- (xbar - 300)/(S/sqrt(n))
+c(xbar, S, n, S/sqrt(n), tstat)
+```
+
+
+**Step 3:** Calculate the standardized test statistic and the $p-$value
+$$t_{stat} = \frac{\bar{x} - \mu_{0}}{\frac{s}{\sqrt{n}}} = `r tstat`$$
+
+* $p-$value = P(get what you got or more in support of $H_A$ when $H_0$ is true)
+
+```{r}
+pvalue <- pt(tstat, n -1, lower = FALSE)
+pvalue
+# Or
+t.test(battery, mu = 300, alternative = "greater")
+t.test(battery, mu = 300, alternative = "greater")$p.value
+```
+
+
+**Step 4:** Statistical and English Conclusions
+
+* Statistical: Fail to reject $H_0$ since the $p-$value (`r pvalue`) is greater than $\alpha = 0.05$.
+
+* English: There **is not** sufficient evidence to suggest the mean is greater than 300 minutes.
+
+______________
+
+## Example
+
+A coffee machine dispenses coffee into paper cups. The machine says it dispenses 10 oz, but the actual amount varies from cup to cup. Actual amounts for 20 cups are: 9.9, 9.9, 10.0, 9.9, 10.0, 9.7, 9.6, 9.5, 9.6, 9.9, 10.0, 9.8, 9.7, 10.2, 9.5, 10.1, 9.8, 10.1, 9.8, and 9.9.
+
+Is there evidence the machine is shortchanging customers?
+
+**Step 1:** Formulate Hypotheses --- $H_0: \mu = ?$ versus $H_A:\mu < > \neq ?$
+
+**Step 2:** Check assumptions and decide on a Model.
+
+```{r}
+coffee <- c(9.9, 9.9, 10.0, 9.9, 10.0, 9.7, 9.6, 9.5, 9.6, 9.9, 10.0, 9.8, 9.7, 10.2, 9.5, 10.1, 9.8, 10.1, 9.8, 9.9)
+DF <- data.frame(coffee = coffee)
+ggplot(data = DF, aes(sample = coffee)) + 
+  geom_qq() + 
+  geom_qq_line() +
+  theme_bw()
+```
+
+One sample $t-$test seems appropriate
+
+$\bar{x} \dot\sim \mathcal{N} \left(\mu, \frac{\sigma}{\sqrt{n}}\right)$ **assuming** $H_0$ is true.
+
+```{r}
+# Your Code Here
+# Compute the standardized test statistic
+
+```
+
+
+**Step 3:** Calculate the standardized test statistic and the $p-$value
+$$t_{stat} = \frac{\bar{x} - \mu_{0}}{\frac{s}{\sqrt{n}}} = ?$$
+
+* $p-$value = P(get what you got or more in support of $H_A$ when $H_0$ is true)
+
+```{r}
+# Your Code Here
+```
+
+
+**Step 4:** Statistical and English Conclusions
+
+* Statistical: Reject/ Fail to Reject $H_0$ since the $p-$value (`r pvalue`) is less/greater than $\alpha = 0.05$.
+
+* English: There **is/is not** sufficient evidence to suggest the mean is less than 10 ounces.
+
+____________________
+
+For a bootstrap hypothesis test, first compute the sample mean and then compute the $\delta$ between the sample mean and the hypothesized mean.  Add or subtract the $\delta$ to each value in the original sample such that the null hypothesis is true for the sample.  
+
+```{r}
+mean(coffee) -> xbar
+xbar
+delta <- mean(coffee) - 10
+delta
+bsp <- (coffee - delta)
+mean(bsp)
+```
+```{r}
+B <- 10000
+bsm <- numeric(B)
+for(i in 1:B){
+  bss <- sample(bsp, 12, replace = TRUE)
+  bsm[i] <- mean(bss)
+}
+hist(bsm)
+pvalue <- mean(bsm <= xbar)
+pvalue
+```
